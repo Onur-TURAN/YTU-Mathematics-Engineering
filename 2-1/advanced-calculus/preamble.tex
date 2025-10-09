@@ -1,0 +1,88 @@
+% --- Paketler ve ayarlar ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[turkish]{babel}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{xstring}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{enumitem}
+\geometry{a4paper, margin=2.5cm}
+\usepackage{environ}
+\usepackage{fancyvrb}
+
+% --- Teorem, tanım, örnek ortamları ---
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{definition}{Definiton}[chapter]
+% note: exercises/examples will be managed by xsim; avoid naming conflicts
+
+% --- Kısa komutlar ---
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\C}{\mathbb{C}}
+
+% -------------------------
+% Lightweight example collection helpers (course / week / topic tagging)
+% We append example bodies to internal macros keyed by course/week/topic.
+% Printing commands expand these macros later. Uses etoolbox and xstring.
+% -------------------------
+\usepackage{etoolbox}
+
+% Current metadata (set these in each lecture/week)
+\newcommand{\CurrentCourse}{}
+\newcommand{\CurrentWeek}{}
+\newcommand{\CurrentTopic}{}
+\newcommand{\Course}[1]{\renewcommand{\CurrentCourse}{#1}}
+\newcommand{\Week}[1]{\renewcommand{\CurrentWeek}{#1}}
+\newcommand{\Topic}[1]{\renewcommand{\CurrentTopic}{#1}}
+
+% storage macros: \examplesAll, dynamic ones like \examplesWeek<id>, \examplesTopic<id>, \examplesCourse<id>
+\newcommand{\examplesAll}{}
+
+\NewEnviron{exampleauto}[1][]{%
+	% typeset small metadata header
+	\par\medskip\noindent\textbf{Example.}\ 
+	\ifstrempty{\CurrentCourse}{}{\textit{(Lesson: \CurrentCourse)}}\ 
+	\ifstrempty{\CurrentWeek}{}{\textit{(Week: \CurrentWeek)}}\ 
+	\ifstrempty{\CurrentTopic}{}{\textit{(Topic: \CurrentTopic)}}\par\smallskip
+
+	% append to global list
+	\gappto{\examplesAll}{\par\smallskip\noindent\textbf{Example.}\ \BODY}%
+
+	% by week (macro name examplesWeek<week>)
+	\ifstrempty{\CurrentWeek}{}{\expandafter\gappto\csname examplesWeek\CurrentWeek\endcsname{\par\smallskip\noindent\textbf{Example.}\ \BODY}}%
+
+	% by topic (create a safe label from CurrentTopic)
+	\ifstrempty{\CurrentTopic}{}{%
+		\StrSubstitute{\CurrentTopic}{ }{_}[\__topiclabel]
+		\expandafter\gappto\csname examplesTopic\__topiclabel\endcsname{\par\smallskip\noindent\textbf{Example.}\ \BODY}%
+	}
+
+	% by course
+	\ifstrempty{\CurrentCourse}{}{%
+		\StrSubstitute{\CurrentCourse}{ }{_}[\__courselabel]
+		\expandafter\gappto\csname examplesCourse\__courselabel\endcsname{\par\smallskip\noindent\textbf{Example.}\ \BODY}%
+	}
+
+	% also typeset the body inline
+	\BODY
+}
+
+% Printing commands
+\newcommand{\PrintAllExamples}{\par\noindent\examplesAll}
+\newcommand{\PrintExamplesByWeek}[1]{%
+	\@ifundefined{examplesWeek#1}{\noindent\textit{(There are no examples for this week.)}}{\par\noindent\csname examplesWeek#1\endcsname}
+}
+\newcommand{\PrintExamplesByTopic}[1]{%
+	\StrSubstitute{#1}{ }{_}[\__tmp]
+	\@ifundefined{examplesTopic\__tmp}{\noindent\textit{(No examples for this topic.)}}{\par\noindent\csname examplesTopic\__tmp\endcsname}
+}
+\newcommand{\PrintExamplesByCourse}[1]{%
+	\StrSubstitute{#1}{ }{_}[\__tmp]
+	\@ifundefined{examplesCourse\__tmp}{\noindent\textit{(No examples for this course.)}}{\par\noindent\csname examplesCourse\__tmp\endcsname}
+}
+
