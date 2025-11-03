@@ -86,7 +86,7 @@ jobs:
         with:
           title: "LaTeX → QMD Dönüşüm Hataları (Günlük Rapor)"
           content-filepath: qmd/conversion_errors.txt
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.turanonur }}
 
 
       # 🔹 Eski örnek adımlar (senin orijinal CI kısmın)
