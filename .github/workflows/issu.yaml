@@ -1,0 +1,168 @@
+name: Dosya Kontrolü ve Issue Açma
+
+on:
+    push:
+    pull_request:
+    workflow_dispatch:
+
+permissions:
+    contents: read
+    issues: write
+
+jobs:
+    scan-and-create-issues:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+                uses: actions/checkout@v4
+
+            - name: Run file checks and open issues for problems
+                uses: actions/github-script@v6
+                with:
+                    script: |
+                        const fs = require('fs').promises;
+                        const path = require('path');
+
+                        const owner = context.repo.owner;
+                        const repo = context.repo.repo;
+                        const labelName = 'automated-file-check';
+
+                        // Create label if it doesn't exist
+                        async function ensureLabel() {
+                            try {
+                                await github.rest.issues.getLabel({ owner, repo, name: labelName });
+                            } catch (e) {
+                                // create label
+                                await github.rest.issues.createLabel({
+                                    owner,
+                                    repo,
+                                    name: labelName,
+                                    color: 'd73a4a',
+                                    description: 'Issues created by automated repository file checks'
+                                });
+                            }
+                        }
+
+                        // Recursively walk the workspace to collect files
+                        async function walk(dir) {
+                            let results = [];
+                            const list = await fs.readdir(dir, { withFileTypes: true });
+                            for (const d of list) {
+                                const full = path.join(dir, d.name);
+                                // Skip .git and workflow files to avoid noise
+                                if (full.includes(path.sep + '.git' + path.sep) || full.includes(path.sep + '.github' + path.sep)) continue;
+                                if (d.isDirectory()) {
+                                    results = results.concat(await walk(full));
+                                } else if (d.isFile()) {
+                                    results.push(full);
+                                }
+                            }
+                            return results;
+                        }
+
+                        // Basic textual checks per file
+                        function analyzeText(content) {
+                            const problems = [];
+                            const lines = content.split(/\r?\n/);
+                            // detect replacement char (often indicates decoding issues)
+                            if (content.includes('\uFFFD')) problems.push('Invalid/unknown character found (possible bad encoding)');
+                            // merge conflict markers
+                            if (content.includes('<<<<<<<') || content.includes('>>>>>>>') || content.includes('=======')) problems.push('Merge conflict markers (<<<<<<< HEAD / ======= / >>>>>>>)');
+                            // trailing whitespace
+                            const trailing = lines.map((l,i)=>(/[ \t]+$/.test(l) ? i+1 : -1)).filter(n=>n>0);
+                            if (trailing.length) problems.push(`Trailing whitespace on lines: ${trailing.slice(0,5).join(', ')}${trailing.length>5 ? ' and more' : ''}`);
+                            // tabs present
+                            if (content.match(/\t/)) problems.push('Tab character(s) found (consider using spaces for indentation)');
+                            // CRLF
+                            if (content.includes('\r\n')) problems.push('CRLF line endings (\\r\\n) detected');
+                            // long lines
+                            const long = lines.map((l,i)=> (l.length > 200 ? i+1 : -1)).filter(n=>n>0);
+                            if (long.length) problems.push(`Very long lines (>200 chars) on lines: ${long.slice(0,5).join(', ')}${long.length>5 ? ' and more' : ''}`);
+                            // TODO/FIXME
+                            const todos = lines.map((l,i)=> (/\b(TODO|FIXME)\b/.test(l) ? i+1 : -1)).filter(n=>n>0);
+                            if (todos.length) problems.push(`TODO/FIXME found on lines: ${todos.slice(0,5).join(', ')}${todos.length>5 ? ' and more' : ''}`);
+
+                            return problems;
+                        }
+
+                        // skip common binary types by checking for null bytes in first chunk
+                        async function isBinaryFile(filePath) {
+                            const fd = await fs.open(filePath, 'r');
+                            try {
+                                const { buffer } = await fd.read(Buffer.alloc(8000), 0, 8000, 0);
+                                for (let i = 0; i < buffer.length; i++) {
+                                    if (buffer[i] === 0) return true;
+                                }
+                                return false;
+                            } finally {
+                                await fd.close();
+                            }
+                        }
+
+                        (async () => {
+                            await ensureLabel();
+
+                            const workspace = process.env.GITHUB_WORKSPACE || '.';
+                            const files = await walk(workspace);
+
+                            // list open issues to avoid duplicates
+                            const openIssues = await github.paginate(github.rest.issues.listForRepo, { owner, repo, state: 'open', per_page: 100 });
+
+                            let created = 0;
+                            for (const f of files) {
+                                // make path relative to workspace root
+                                const rel = path.relative(workspace, f).replace(/\\/g, '/');
+                                if (!rel) continue;
+
+                                // Skip some large/binary types by extension
+                                const skipExt = ['.png','.jpg','.jpeg','.gif','.ico','.exe','.dll','.so','.a','.zip','.tar','.gz','.woff','.woff2','.ttf','.pdf','.mp4','.mov','.mp3'];
+                                if (skipExt.some(ext => rel.toLowerCase().endsWith(ext))) continue;
+
+                                try {
+                                    if (await isBinaryFile(f)) continue;
+                                } catch (e) {
+                                    // can't read file? skip
+                                    continue;
+                                }
+
+                                let content;
+                                try {
+                                    content = await fs.readFile(f, 'utf8');
+                                } catch (err) {
+                                    // unreadable as utf8 -> report encoding problem
+                                    const title = `[automated] ${rel} — unreadable/encoding issue`;
+                                    const body = `The file \`${rel}\` could not be read as UTF-8 by the automated checker.\n\nPossible cause: binary or unknown encoding.\n\nRun a manual check on this file.`;
+                                    if (!openIssues.some(i => i.title === title)) {
+                                        await github.rest.issues.create({ owner, repo, title, body, labels: [labelName] });
+                                        created++;
+                                    }
+                                    continue;
+                                }
+
+                                const problems = analyzeText(content);
+                                if (problems.length === 0) continue;
+
+                                const title = `[automated] ${rel} — ${problems.length} problem(s) found`;
+                                // skip creating duplicate issues
+                                if (openIssues.some(i => i.title === title)) continue;
+
+                                // construct a concise body with examples (first offending line samples)
+                                let body = `Automated file check detected issues in \`${rel}\`.\n\nProblems:\n`;
+                                for (const p of problems) {
+                                    body += `- ${p}\n`;
+                                }
+                                // include the first few lines of file for context
+                                const snippetLines = content.split(/\r?\n/).slice(0, 20).map((l,i)=> `${i+1}: ${l}`);
+                                body += `\nFirst 20 lines of the file for context:\n\n\`\`\`\n${snippetLines.join('\n')}\n\`\`\`\n\nThis issue was created automatically by the repository file check workflow.`;
+                                await github.rest.issues.create({ owner, repo, title, body, labels: [labelName] });
+                                created++;
+                            }
+
+                            if (created === 0) {
+                                core.info('No problems detected in text files.');
+                            } else {
+                                core.info(`Created ${created} issue(s) for detected problems.`);
+                            }
+                        })().catch(err => {
+                            core.setFailed(`Script failed: ${err.message}\n${err.stack}`);
+                        });
