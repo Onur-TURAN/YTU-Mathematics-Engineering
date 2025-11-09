@@ -22,6 +22,10 @@ jobs:
       # 1️⃣ Repo'yu al
       - name: Checkout this repository
         uses: actions/checkout@v4
+      - name: Install pandoc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc
 
       # 2️⃣ Python ortamı hazırla (dönüşüm script'i için)
       - name: Set up Python
@@ -98,7 +102,4 @@ jobs:
           echo "Add other actions to build,"
           echo "test, and deploy your project."
           
-      - name: Install pandoc
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y pandoc
+
