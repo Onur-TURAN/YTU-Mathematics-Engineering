@@ -1,9 +1,9 @@
 name: Dosya Kontrolü ve Issue Açma
 
 on:
-    push:
-    pull_request:
-    workflow_dispatch:
+    push: {}
+    pull_request: {}
+    workflow_dispatch: {}
 
 permissions:
     contents: read
@@ -14,12 +14,12 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout repository
-                uses: actions/checkout@v4
+              uses: actions/checkout@v4
 
             - name: Run file checks and open issues for problems
-                uses: actions/github-script@v6
-                with:
-                    script: |
+              uses: actions/github-script@v6
+              with:
+                script: |
                         const fs = require('fs').promises;
                         const path = require('path');
 
