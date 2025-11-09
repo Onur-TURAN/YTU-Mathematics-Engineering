@@ -97,7 +97,8 @@ jobs:
         run: |
           echo "Add other actions to build,"
           echo "test, and deploy your project."
-          - name: Install pandoc
+          
+      - name: Install pandoc
         run: |
           sudo apt-get update
           sudo apt-get install -y pandoc
