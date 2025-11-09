@@ -1,8 +1,21 @@
 name: Dosya Kontrolü ve Issue Açma
 
 on:
-    push: {}
-    pull_request: {}
+    push:
+        # avoid running on large binaries or build artifacts
+        paths-ignore:
+            - '**/*.pdf'
+            - 'figures/**'
+            - 'build/**'
+            - 'dist/**'
+            - 'node_modules/**'
+    pull_request:
+        paths-ignore:
+            - '**/*.pdf'
+            - 'figures/**'
+            - 'build/**'
+            - 'dist/**'
+            - 'node_modules/**'
     workflow_dispatch:
         inputs:
             scan_root:
@@ -13,6 +26,10 @@ on:
                 description: 'If true, do not create issues; only log findings'
                 required: false
                 default: 'true'
+            max_issues:
+                description: 'Maximum number of issues to create in a single run (0 = unlimited)'
+                required: false
+                default: '10'
 
 permissions:
     contents: read
@@ -30,10 +47,12 @@ jobs:
                 env:
                     SCAN_ROOT: ${{ github.event.inputs.scan_root }}
                     DRY_RUN: ${{ github.event.inputs.dry_run }}
+                    MAX_ISSUES: ${{ github.event.inputs.max_issues }}
                 with:
                     script: |
                         const fs = require('fs').promises;
                         const path = require('path');
+                        const crypto = require('crypto');
 
                         const owner = context.repo.owner;
                         const repo = context.repo.repo;
@@ -128,6 +147,7 @@ jobs:
                             // list open issues to avoid duplicates
                             const openIssues = await github.paginate(github.rest.issues.listForRepo, { owner, repo, state: 'open', per_page: 100 });
 
+                            const maxIssues = parseInt(process.env.MAX_ISSUES || '10', 10) || 0;
                             let created = 0;
                             for (const f of files) {
                                 // make path relative to workspace root
@@ -168,8 +188,16 @@ jobs:
                                 if (problems.length === 0) continue;
 
                                 const title = `[automated] ${rel} — ${problems.length} problem(s) found`;
-                                // skip creating duplicate issues
-                                if (openIssues.some(i => i.title === title)) continue;
+                                // compute a short fingerprint so we can deduplicate more robustly
+                                const fingerprint = crypto.createHash('sha1').update(rel + '::' + problems.join('|')).digest('hex').slice(0,12);
+                                // skip creating duplicate issues if an open issue already contains this fingerprint or exact title
+                                if (openIssues.some(i => (i.title === title) || (i.body && i.body.includes(`fingerprint: ${fingerprint}`)))) continue;
+
+                                // respect max_issues limit (0 = unlimited)
+                                if (maxIssues > 0 && created >= maxIssues) {
+                                    console.log(`Max issues limit reached (${maxIssues}), stopping creation.`);
+                                    break;
+                                }
 
                                 // construct a concise body with examples (first offending line samples)
                                 let body = `Automated file check detected issues in \`${rel}\`.\n\nProblems:\n`;
@@ -179,6 +207,8 @@ jobs:
                                 // include the first few lines of file for context
                                 const snippetLines = content.split(/\r?\n/).slice(0, 20).map((l,i)=> `${i+1}: ${l}`);
                                 body += `\nFirst 20 lines of the file for context:\n\n\`\`\`\n${snippetLines.join('\n')}\n\`\`\`\n\nThis issue was created automatically by the repository file check workflow.`;
+                                // append fingerprint marker for future deduplication
+                                body += `\n\n<!-- fingerprint: ${fingerprint} -->`;
                                 if (dryRun) {
                                     console.log('DRY RUN: would create issue with title:', title);
                                 } else {
