@@ -1,0 +1,16 @@
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\tikzset{entity/.style={draw, rectangle, minimum width=2.6cm, minimum height=0.8cm}}
+\node[entity] (Hospital) at (0,0) {Hospital};
+\node[entity] (Department) at (3,0) {Department};
+\node[entity] (Doctor) at (6,0) {Doctor};
+\node[entity] (Patient) at (3,-2) {Patient};
+\node[entity] (Appointment) at (6,-2) {Appointment};
+\draw[-{Stealth}] (Hospital) -- node[above]{1:N} (Department);
+\draw[-{Stealth}] (Department) -- node[above]{1:N} (Doctor);
+\draw[-{Stealth}] (Patient) -- node[below]{1:N} (Appointment);
+\draw[-{Stealth}] (Doctor) -- node[right]{1:N} (Appointment);
+\end{tikzpicture}
+\caption{ER özeti (modüler)}
+\end{figure}

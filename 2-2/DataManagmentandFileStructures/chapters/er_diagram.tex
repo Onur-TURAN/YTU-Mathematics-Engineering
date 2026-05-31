@@ -1,0 +1,503 @@
+\newpage
+\section*{2. ER/EER Model Design}
+
+\subsection*{2.1 Requirements Analysis Summary}
+
+The Smart Healthcare Platform must support:
+\begin{itemize}
+    \item Multiple hospitals and departments
+    \item Doctors with specialties and licenses
+    \item Patients with medical histories and insurance
+    \item Appointments and medical records
+    \item Prescriptions (weak entity dependent on appointments)
+    \item Lab results and billing
+    \item Security and device management
+\end{itemize}
+
+\subsection*{2.2 Entity Definitions}
+
+\subsubsection*{1. Hospital}
+
+\begin{tabular}{lll}
+\textbf{Attribute} & \textbf{Type} & \textbf{Notes} \\
+\hline
+HospitalID & PK & \\
+HospitalName & VARCHAR & \\
+Address & VARCHAR & \\
+City & VARCHAR & \\
+PhoneNumber & VARCHAR & \\
+\end{tabular}
+
+\subsubsection*{2. User (Superclass for EER)}
+
+\begin{tabular}{lll}
+\textbf{Attribute} & \textbf{Type} & \textbf{Notes} \\
+\hline
+UserID & PK & \\
+FirstName & VARCHAR & composite: Name \\
+LastName & VARCHAR & composite: Name \\
+Email & VARCHAR & UNIQUE \\
+Phone & VARCHAR & multivalued \\
+City & VARCHAR & composite: Address \\
+Street & VARCHAR & composite: Address \\
+PostalCode & VARCHAR & composite: Address \\
+Role & VARCHAR & Patient, Doctor, Admin, SecurityAnalyst \\
+\end{tabular}
+
+\subsection*{2.3 Detailed Entity Specifications}
+
+\subsubsection*{3. Department}
+
+Relationship: one hospital $\rightarrow$ many departments.
+
+\begin{tabular}{lll}
+\textbf{Attribute} & \textbf{Type} & \textbf{Notes} \\
+DepartmentID & PK &  \\
+HospitalID & FK & references Hospital \\
+DepartmentName & VARCHAR &  \\
+FloorNumber & INTEGER &  \\
+\end{tabular}
+
+\subsection*{4. Patient}
+\begin{tabular}{lll}
+\textbf{Attribute} & \textbf{Type} & \textbf{Notes} \\
+PatientID & PK &  \\
+UserID & FK & references User \\
+BloodType & VARCHAR &  \\
+BirthDate & DATE &  \\
+EmergencyContact & VARCHAR &  \\
+InsuranceID & FK & references Insurance \\
+\end{tabular}
+
+\subsection*{5. Doctor}
+\begin{tabular}{lll}
+\textbf{Attribute} & \textbf{Type} & \textbf{Notes} \\
+DoctorID & PK &  \\
+UserID & FK & references User \\
+DepartmentID & FK &  \\
+Specialty & VARCHAR &  \\
+LicenseNumber & VARCHAR & UNIQUE \\
+\end{tabular}
+
+\subsection*{6. Appointment}
+
+This works like a junction entity.
+
+It resolves the Doctor $\leftrightarrow$ Patient relationship.
+
+\begin{tabular}{lll}
+\textbf{Attribute} & \textbf{Type} & \textbf{Notes} \\
+AppointmentID & PK &  \\
+PatientID & FK &  \\
+DoctorID & FK &  \\
+AppointmentDate & TIMESTAMP &  \\
+Status & VARCHAR &  \\
+DiagnosisSummary & TEXT &  \\
+\end{tabular}
+
+\subsection*{7. Prescription (Weak Entity)}
+
+Weak entity.
+
+It is meaningless without an Appointment.
+
+\begin{tabular}{lll}
+\textbf{Attribute} & \textbf{Type} & \textbf{Notes} \\
+PrescriptionNo & Partial Key &  \\
+AppointmentID & FK & identifying relationship \\
+MedicineName & VARCHAR &  \\
+Dosage & VARCHAR &  \\
+DurationDays & INTEGER &  \\
+\end{tabular}
+
+Composite PK:
+
+\[(PrescriptionNo, AppointmentID)\]
+
+\subsection*{8. LabResult}
+\begin{tabular}{lll}
+\textbf{Attribute} & \textbf{Type} & \textbf{Notes} \\
+ResultID & PK &  \\
+AppointmentID & FK &  \\
+TestName & VARCHAR &  \\
+ResultValue & VARCHAR &  \\
+ResultDate & DATE &  \\
+\end{tabular}
+
+\subsection*{9. Insurance}
+\begin{tabular}{lll}
+\textbf{Attribute} & \textbf{Type} & \textbf{Notes} \\
+InsuranceID & PK &  \\
+ProviderName & VARCHAR &  \\
+PolicyNumber & VARCHAR &  \\
+CoverageType & VARCHAR &  \\
+\end{tabular}
+
+\subsection*{10. Billing}
+\begin{tabular}{lll}
+\textbf{Attribute} & \textbf{Type} & \textbf{Notes} \\
+BillID & PK &  \\
+PatientID & FK &  \\
+Amount & DECIMAL &  \\
+PaymentStatus & VARCHAR &  \\
+BillingDate & DATE &  \\
+\end{tabular}
+
+\subsection*{11. MedicalDevice}
+
+Cybersecurity starts here.
+
+\begin{tabular}{lll}
+\textbf{Attribute} & \textbf{Type} & \textbf{Notes} \\
+DeviceID & PK &  \\
+HospitalID & FK &  \\
+DeviceType & VARCHAR &  \\
+FirmwareVersion & VARCHAR &  \\
+RiskLevel & VARCHAR &  \\
+\end{tabular}
+
+\subsection*{12. SecurityEvent}
+
+SIEM logic.
+
+\begin{tabular}{lll}
+\textbf{Attribute} & \textbf{Type} & \textbf{Notes} \\
+EventID & PK &  \\
+UserID & FK &  \\
+DeviceID & FK & nullable \\
+EventType & VARCHAR &  \\
+Severity & VARCHAR &  \\
+SourceIP & VARCHAR &  \\
+EventTimestamp & TIMESTAMP &  \\
+\end{tabular}
+
+
+Composite PK:
+
+\[(DeviceID, VulnerabilityID)\]
+
+\section{ER Relationship Summary}
+\begin{tabular}{ll}
+\textbf{Relationship} & \textbf{Cardinality} \\
+Hospital $\rightarrow$ Department & 1:N \\
+Department $\rightarrow$ Doctor & 1:N \\
+Patient $\rightarrow$ Appointment & 1:N \\
+Doctor $\rightarrow$ Appointment & 1:N \\
+Appointment $\rightarrow$ Prescription & 1:N \\
+Appointment $\rightarrow$ LabResult & 1:N \\
+Patient $\rightarrow$ Billing & 1:N \\
+Hospital $\rightarrow$ MedicalDevice & 1:N \\
+MedicalDevice $\leftrightarrow$ Vulnerability & N:M \\
+User $\rightarrow$ SecurityEvent & 1:N \\
+\end{tabular}
+
+\section{EER Model: Enhanced Features}
+
+\subsection*{Overview}
+Now the EER part.
+
+\subsection*{Specialization / Generalization}
+Superclass
+
+User
+
+Subclasses
+Patient
+Doctor
+Admin
+SecurityAnalyst
+
+This structure shows:
+
+inheritance
+specialization
+ISA hierarchy
+
+\subsection*{EER Features}
+
+EER Özellikleri
+Type:
+
+Disjoint Specialization
+
+A user cannot be both:
+
+the Patient
+the Doctor
+
+at the same time.
+
+Participation:
+
+Total Participation
+
+Every User must have a role.
+
+\subsection*{Composite Attribute Example}
+
+User:
+
+Name:
+
+FirstName
+LastName
+
+Address:
+
+City
+Street
+PostalCode
+\subsection*{Multivalued Attribute}
+
+Patient:
+
+PhoneNumbers
+
+During relational mapping, this is separated into its own table:
+
+PatientPhone
+
+\begin{tabular}{ll}
+PatientID & PhoneNumber \\
+\end{tabular}
+
+\subsection*{Weak Entity}
+
+Prescription
+
+Owner entity:
+
+Appointment
+
+Partial key:
+
+PrescriptionNo
+\subsection*{Category / Union Type (Optional Bonus)}
+StaffAccess
+
+Union:
+
+Doctor
+Admin
+SecurityAnalyst
+
+It is optional; do not overcomplicate it.
+
+\section{Diagram Checklist}
+ER diagram should show:
+\begin{itemize}
+    \item PK
+    \item FK
+    \item cardinality
+    \item weak entity
+    \item total participation
+\end{itemize}
+
+EER diagram should additionally show:
+\begin{itemize}
+    \item ISA hierarchy
+    \item specialization
+    \item inheritance
+    \item disjoint/overlap
+    \item total/partial participation
+\end{itemize}
+
+This structure is enough for the ER/EER part of the assignment.
+
+% (Removed duplicate positioning-based TikZ figures — coordinate-based figures are above)
+
+\newpage
+\section*{3. Mapping to Relational Model}
+
+Convert the ER/EER design into normalized relational tables:
+
+\subsection*{3.1 Relational Schema}
+
+\textbf{User} (UserID, FirstName, LastName, Email, Phone, City, Street, PostalCode, Role)
+\begin{itemize}
+    \item PK: UserID
+    \item Composite attribute: Name (FirstName, LastName), Address (City, Street, PostalCode)
+    \item Multivalued Phone handled in UserPhone table
+\end{itemize}
+
+\textbf{Hospital} (HospitalID, HospitalName, Address, City, PhoneNumber)
+\begin{itemize}
+    \item PK: HospitalID
+\end{itemize}
+
+\textbf{Department} (DepartmentID, HospitalID, DepartmentName, FloorNumber)
+\begin{itemize}
+    \item PK: DepartmentID
+    \item FK: HospitalID $\rightarrow$ Hospital
+\end{itemize}
+
+\textbf{Doctor} (DoctorID, UserID, DepartmentID, Specialty, LicenseNumber)
+\begin{itemize}
+    \item PK: DoctorID
+    \item FK: UserID $\rightarrow$ User
+    \item FK: DepartmentID $\rightarrow$ Department
+    \item UNIQUE: LicenseNumber
+\end{itemize}
+
+\textbf{Patient} (PatientID, UserID, BloodType, BirthDate, EmergencyContact, InsuranceID)
+\begin{itemize}
+    \item PK: PatientID
+    \item FK: UserID $\rightarrow$ User
+    \item FK: InsuranceID $\rightarrow$ Insurance
+\end{itemize}
+
+\textbf{Appointment} (AppointmentID, PatientID, DoctorID, AppointmentDate, Status, DiagnosisSummary)
+\begin{itemize}
+    \item PK: AppointmentID
+    \item FK: PatientID $\rightarrow$ Patient
+    \item FK: DoctorID $\rightarrow$ Doctor
+\end{itemize}
+
+\textbf{Prescription} (PrescriptionNo, AppointmentID, MedicineName, Dosage, DurationDays)
+\begin{itemize}
+    \item PK: (PrescriptionNo, AppointmentID) — Composite Key
+    \item FK: AppointmentID $\rightarrow$ Appointment
+    \item Weak entity dependent on Appointment
+\end{itemize}
+
+\textbf{LabResult} (ResultID, AppointmentID, TestName, ResultValue, ResultDate)
+\begin{itemize}
+    \item PK: ResultID
+    \item FK: AppointmentID $\rightarrow$ Appointment
+\end{itemize}
+
+\textbf{Insurance} (InsuranceID, ProviderName, PolicyNumber, CoverageType)
+\begin{itemize}
+    \item PK: InsuranceID
+\end{itemize}
+
+\textbf{Billing} (BillID, PatientID, Amount, PaymentStatus, BillingDate)
+\begin{itemize}
+    \item PK: BillID
+    \item FK: PatientID $\rightarrow$ Patient
+\end{itemize}
+
+\textbf{MedicalDevice} (DeviceID, HospitalID, DeviceType, FirmwareVersion, RiskLevel)
+\begin{itemize}
+    \item PK: DeviceID
+    \item FK: HospitalID $\rightarrow$ Hospital
+\end{itemize}
+
+\textbf{SecurityEvent} (EventID, UserID, DeviceID, EventType, Severity, SourceIP, EventTimestamp)
+\begin{itemize}
+    \item PK: EventID
+    \item FK: UserID $\rightarrow$ User
+    \item FK: DeviceID $\rightarrow$ MedicalDevice (nullable)
+\end{itemize}
+
+\textbf{UserPhone} (UserID, PhoneNumber)
+\begin{itemize}
+    \item PK: (UserID, PhoneNumber)
+    \item FK: UserID $\rightarrow$ User
+\end{itemize}
+
+\newpage
+\section*{4. Functional Dependencies}
+
+\subsection*{4.1 Hospital Table}
+
+\begin{itemize}
+    \item HospitalID $\rightarrow$ HospitalName, Address, City, PhoneNumber
+    \item All attributes depend solely on HospitalID
+\end{itemize}
+
+\subsection*{4.2 Doctor Table}
+
+\begin{itemize}
+    \item DoctorID $\rightarrow$ UserID, DepartmentID, Specialty, LicenseNumber
+    \item UserID $\rightarrow$ FirstName, LastName, Email (via User table)
+    \item DepartmentID $\rightarrow$ DepartmentName, FloorNumber (via Department table)
+    \item LicenseNumber $\rightarrow$ DoctorID (candidate key)
+\end{itemize}
+
+\subsection*{4.3 Patient Table}
+
+\begin{itemize}
+    \item PatientID $\rightarrow$ UserID, BloodType, BirthDate, EmergencyContact, InsuranceID
+    \item UserID $\rightarrow$ FirstName, LastName, Email (via User table)
+    \item InsuranceID $\rightarrow$ ProviderName, PolicyNumber, CoverageType (via Insurance table)
+\end{itemize}
+
+\subsection*{4.4 Appointment Table}
+
+\begin{itemize}
+    \item AppointmentID $\rightarrow$ PatientID, DoctorID, AppointmentDate, Status, DiagnosisSummary
+    \item PatientID $\rightarrow$ BloodType, BirthDate (via Patient table)
+    \item DoctorID $\rightarrow$ Specialty, LicenseNumber (via Doctor table)
+\end{itemize}
+
+\subsection*{4.5 Prescription Table}
+
+\begin{itemize}
+    \item (PrescriptionNo, AppointmentID) $\rightarrow$ MedicineName, Dosage, DurationDays
+    \item AppointmentID $\rightarrow$ PatientID, DoctorID (via Appointment table)
+\end{itemize}
+
+\newpage
+\section*{5. Normalization Analysis}
+
+\subsection*{5.1 First Normal Form (1NF)}
+
+\textbf{Status:} ✓ Already in 1NF
+
+All tables have atomic values (no composite or multivalued attributes in main tables).
+\begin{itemize}
+    \item User: Phone moved to UserPhone table
+    \item Address attributes (City, Street, PostalCode) kept as separate columns (acceptable for 1NF)
+\end{itemize}
+
+\subsection*{5.2 Second Normal Form (2NF)}
+
+\textbf{Status:} ✓ Already in 2NF
+
+All non-key attributes are fully dependent on the primary key.
+
+\begin{itemize}
+    \item Doctor table: DoctorID is PK; Specialty and LicenseNumber depend fully on DoctorID
+    \item Patient table: PatientID is PK; BloodType, BirthDate depend fully on PatientID
+    \item Prescription table: Composite PK (PrescriptionNo, AppointmentID); MedicineName, Dosage depend on the full key
+\end{itemize}
+
+\subsection*{5.3 Third Normal Form (3NF)}
+
+\textbf{Status:} ✓ Already in 3NF
+
+No transitive dependencies. Non-key attributes do not depend on other non-key attributes.
+
+\begin{itemize}
+    \item Doctor: Specialty depends directly on DoctorID, not on another non-key attribute
+    \item Patient: BloodType depends directly on PatientID
+    \item Appointment: Status depends on AppointmentID, not transitively through PatientID
+\end{itemize}
+
+\subsection*{5.4 Boyce-Codd Normal Form (BCNF)}
+
+\textbf{Status:} ✓ BCNF-compliant for critical tables
+
+Every determinant is a candidate key.
+
+\begin{itemize}
+    \item Doctor: LicenseNumber is a candidate key; all FDs originate from candidate keys
+    \item Hospital: HospitalID is the only determinant and is the PK
+    \item Insurance: InsuranceID is the only determinant and is the PK
+\end{itemize}
+
+\subsection*{5.5 Normalization Summary Table}
+
+\begin{tabular}{lcccc}
+\textbf{Table} & \textbf{1NF} & \textbf{2NF} & \textbf{3NF} & \textbf{BCNF} \\
+\hline
+Hospital & ✓ & ✓ & ✓ & ✓ \\
+Doctor & ✓ & ✓ & ✓ & ✓ \\
+Patient & ✓ & ✓ & ✓ & ✓ \\
+Appointment & ✓ & ✓ & ✓ & ✓ \\
+Prescription & ✓ & ✓ & ✓ & ✓ \\
+Department & ✓ & ✓ & ✓ & ✓ \\
+\end{tabular}
+
+All tables are normalized up to BCNF, ensuring data integrity and minimizing redundancy.

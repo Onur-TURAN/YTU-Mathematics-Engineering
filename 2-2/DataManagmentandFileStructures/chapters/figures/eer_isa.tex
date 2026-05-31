@@ -1,0 +1,14 @@
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\tikzset{entity/.style={draw, rectangle, minimum width=2.6cm, minimum height=0.7cm}}
+\node[entity] (User) at (0,0) {User};
+\node[entity] (Patient) at (-2,-2) {Patient};
+\node[entity] (Doctor) at (2,-2) {Doctor};
+\node[entity] (Admin) at (0,-2) {Admin};
+\draw[-{Stealth}] (User) -- (Patient);
+\draw[-{Stealth}] (User) -- (Doctor);
+\draw[-{Stealth}] (User) -- (Admin);
+\end{tikzpicture}
+\caption{EER ISA (modüler)}
+\end{figure}
