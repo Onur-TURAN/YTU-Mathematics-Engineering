@@ -1,5 +1,5 @@
 \newpage
-\section*{2. ER/EER Model Design}
+\section{2. ER/EER Model Design}
 
 \subsection*{2.1 Requirements Analysis Summary}
 
@@ -176,9 +176,11 @@ Composite PK:
 
 \[(DeviceID, VulnerabilityID)\]
 
-\section{ER Relationship Summary}
+\subsection*{ER Relationship Summary}
+
 \begin{tabular}{ll}
 \textbf{Relationship} & \textbf{Cardinality} \\
+\hline
 Hospital $\rightarrow$ Department & 1:N \\
 Department $\rightarrow$ Doctor & 1:N \\
 Patient $\rightarrow$ Appointment & 1:N \\
@@ -191,7 +193,7 @@ MedicalDevice $\leftrightarrow$ Vulnerability & N:M \\
 User $\rightarrow$ SecurityEvent & 1:N \\
 \end{tabular}
 
-\section{EER Model: Enhanced Features}
+\subsection*{EER Model: Enhanced Features}
 
 \subsection*{Overview}
 Now the EER part.
@@ -307,7 +309,7 @@ This structure is enough for the ER/EER part of the assignment.
 % (Removed duplicate positioning-based TikZ figures — coordinate-based figures are above)
 
 \newpage
-\section*{3. Mapping to Relational Model}
+\section{3. Relational Schema Mapping}
 
 Convert the ER/EER design into normalized relational tables:
 
@@ -397,7 +399,7 @@ Convert the ER/EER design into normalized relational tables:
 \end{itemize}
 
 \newpage
-\section*{4. Functional Dependencies}
+\section{4. Functional Dependencies}
 
 \subsection*{4.1 Hospital Table}
 
@@ -439,11 +441,11 @@ Convert the ER/EER design into normalized relational tables:
 \end{itemize}
 
 \newpage
-\section*{5. Normalization Analysis}
+\section{5. Normalization Analysis}
 
 \subsection*{5.1 First Normal Form (1NF)}
 
-\textbf{Status:} ✓ Already in 1NF
+\textbf{Status:} \checkmark~Already in 1NF
 
 All tables have atomic values (no composite or multivalued attributes in main tables).
 \begin{itemize}
@@ -453,7 +455,7 @@ All tables have atomic values (no composite or multivalued attributes in main ta
 
 \subsection*{5.2 Second Normal Form (2NF)}
 
-\textbf{Status:} ✓ Already in 2NF
+\textbf{Status:} \checkmark~Already in 2NF
 
 All non-key attributes are fully dependent on the primary key.
 
@@ -465,7 +467,7 @@ All non-key attributes are fully dependent on the primary key.
 
 \subsection*{5.3 Third Normal Form (3NF)}
 
-\textbf{Status:} ✓ Already in 3NF
+\textbf{Status:} \checkmark~Already in 3NF
 
 No transitive dependencies. Non-key attributes do not depend on other non-key attributes.
 
@@ -477,7 +479,7 @@ No transitive dependencies. Non-key attributes do not depend on other non-key at
 
 \subsection*{5.4 Boyce-Codd Normal Form (BCNF)}
 
-\textbf{Status:} ✓ BCNF-compliant for critical tables
+\textbf{Status:} \checkmark~BCNF-compliant for critical tables
 
 Every determinant is a candidate key.
 
@@ -492,12 +494,12 @@ Every determinant is a candidate key.
 \begin{tabular}{lcccc}
 \textbf{Table} & \textbf{1NF} & \textbf{2NF} & \textbf{3NF} & \textbf{BCNF} \\
 \hline
-Hospital & ✓ & ✓ & ✓ & ✓ \\
-Doctor & ✓ & ✓ & ✓ & ✓ \\
-Patient & ✓ & ✓ & ✓ & ✓ \\
-Appointment & ✓ & ✓ & ✓ & ✓ \\
-Prescription & ✓ & ✓ & ✓ & ✓ \\
-Department & ✓ & ✓ & ✓ & ✓ \\
+Hospital & \checkmark & \checkmark & \checkmark & \checkmark \\
+Doctor & \checkmark & \checkmark & \checkmark & \checkmark \\
+Patient & \checkmark & \checkmark & \checkmark & \checkmark \\
+Appointment & \checkmark & \checkmark & \checkmark & \checkmark \\
+Prescription & \checkmark & \checkmark & \checkmark & \checkmark \\
+Department & \checkmark & \checkmark & \checkmark & \checkmark \\
 \end{tabular}
 
 All tables are normalized up to BCNF, ensuring data integrity and minimizing redundancy.

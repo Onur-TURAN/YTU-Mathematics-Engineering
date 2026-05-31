@@ -1,9 +1,10 @@
-\newpage
-\section{6. SQL Implementation}
+-- Akıllı Hastane Yönetim Sistemi
+-- Tüm SQL komutları (Schema, Veri, Sorgular, Indexler)
 
-\subsection*{6.1 CREATE TABLE Statements}
+CREATE DATABASE IF NOT EXISTS SmartHealthcare;
+USE SmartHealthcare;
 
-\begin{verbatim}
+-- Create all tables
 CREATE TABLE Hospital (
     HospitalID INT PRIMARY KEY AUTO_INCREMENT,
     HospitalName VARCHAR(100) NOT NULL,
@@ -130,18 +131,16 @@ CREATE TABLE SecurityEvent (
     INDEX idx_user (UserID),
     INDEX idx_timestamp (EventTimestamp)
 );
-\end{verbatim}
 
-\subsection*{6.2 Sample INSERT Statements}
+-- Örnek veriler (30+ kayıt)
 
-\begin{verbatim}
--- Insert sample hospitals
+-- Hastaneler
 INSERT INTO Hospital VALUES 
 (1, 'Central City Hospital', '123 Main St', 'Istanbul', '2125551234'),
 (2, 'Metropolitan Medical Center', '456 Oak Ave', 'Ankara', '3125556789'),
 (3, 'Aegean Health Campus', '789 Coastal Rd', 'Izmir', '2325553456');
 
--- Insert 15+ User records (mix of doctors, patients, admins)
+-- Kullanıcılar
 INSERT INTO User VALUES 
 (1, 'Ahmet', 'Yilmaz', 'ahmet.yilmaz@mail.com', 'Istanbul', 'Main St', '34000', 'Doctor'),
 (2, 'Fatima', 'Kaya', 'fatima.kaya@mail.com', 'Istanbul', 'Oak Ave', '34001', 'Patient'),
@@ -159,7 +158,7 @@ INSERT INTO User VALUES
 (14, 'Security', 'Officer', 'security@hospital.com', 'Istanbul', 'Security Rd', '34006', 'SecurityAnalyst'),
 (15, 'Onur', 'Bal', 'onur.bal@mail.com', 'Ankara', 'Center Rd', '06104', 'Doctor');
 
--- Insert multivalued phone attribute
+-- Telefon numaraları
 INSERT INTO UserPhone VALUES 
 (1, '5551234567'), (1, '2165551000'),
 (2, '5552223344'), (2, '2165552000'),
@@ -168,7 +167,7 @@ INSERT INTO UserPhone VALUES
 (7, '5555556789'),
 (8, '5556667890');
 
--- Insert insurance records (>= 10 records)
+-- Sigorta şirketleri
 INSERT INTO Insurance VALUES 
 (1, 'Blue Cross', 'BC2024001', 'Comprehensive'),
 (2, 'Acibadem Health', 'AH2024002', 'Premium'),
@@ -181,7 +180,7 @@ INSERT INTO Insurance VALUES
 (9, 'Ray Sigorta', 'RAY2024001', 'Standard'),
 (10, 'Groupama', 'GRP2024001', 'Comprehensive');
 
--- Insert patient records (linked to users 2,5,6,9,10,11,12)
+-- Hastalar
 INSERT INTO Patient VALUES 
 (2, 2, 'O+', '1985-03-15', 'Ayse Kaya', 1),
 (5, 5, 'A+', '1990-07-22', 'Mehmet Yilmaz', 3),
@@ -191,7 +190,7 @@ INSERT INTO Patient VALUES
 (11, 11, 'A-', '2000-01-10', 'Emre Sahin', 6),
 (12, 12, 'B+', '1987-04-18', 'Deniz Arslan', 7);
 
--- Insert departments
+-- Bölümler
 INSERT INTO Department VALUES 
 (1, 1, 'Cardiology', 3),
 (2, 1, 'Dermatology', 2),
@@ -202,7 +201,7 @@ INSERT INTO Department VALUES
 (7, 3, 'Internal Medicine', 1),
 (8, 3, 'Dermatology', 2);
 
--- Insert doctor records (users 1,4,7,8,15)
+-- Doktorlar
 INSERT INTO Doctor VALUES 
 (1, 1, 1, 'Cardiology', 'LIC001234', '2024-01-10 09:00:00'),
 (4, 4, 2, 'Dermatology', 'LIC001235', '2024-02-15 10:00:00'),
@@ -210,7 +209,7 @@ INSERT INTO Doctor VALUES
 (8, 8, 4, 'Cardiology', 'LIC001237', '2024-03-01 14:00:00'),
 (15, 15, 5, 'Orthopedics', 'LIC001238', '2024-02-10 11:00:00');
 
--- Insert 15+ appointments
+-- Randevular
 INSERT INTO Appointment VALUES 
 (1, 2, 1, '2024-05-20 10:30:00', 'Completed', 'Patient shows symptoms of hypertension'),
 (2, 2, 1, '2024-06-01 14:00:00', 'Scheduled', 'Follow-up appointment'),
@@ -228,7 +227,7 @@ INSERT INTO Appointment VALUES
 (14, 11, 1, '2024-07-05 15:45:00', 'Completed', 'Heart rate study'),
 (15, 12, 8, '2024-07-10 09:15:00', 'Scheduled', 'Second opinion cardiology');
 
--- Insert prescriptions (weak entity - 15+ records)
+-- İlaç reçeteleri
 INSERT INTO Prescription VALUES 
 (1, 1, 'Lisinopril', '10mg daily', 30),
 (2, 1, 'Metoprolol', '25mg twice daily', 30),
@@ -246,7 +245,7 @@ INSERT INTO Prescription VALUES
 (1, 9, 'Ibuprofen', '400mg thrice daily', 14),
 (1, 10, 'Tramadol', '50mg as needed', 30);
 
--- Insert lab results
+-- Laboratuvar sonuçları
 INSERT INTO LabResult VALUES 
 (1, 1, 'Blood Pressure', '140/90 mmHg', '2024-05-20'),
 (2, 1, 'Cholesterol', '240 mg/dL', '2024-05-20'),
@@ -260,7 +259,7 @@ INSERT INTO LabResult VALUES
 (10, 12, 'CT Scan', 'Findings noted', '2024-06-25'),
 (11, 14, 'Electrocardiogram', 'Abnormal - T wave', '2024-07-05');
 
--- Insert billing records
+-- Faturalar
 INSERT INTO Billing VALUES 
 (1, 2, 800.00, 'Paid', '2024-05-20'),
 (2, 5, 750.00, 'Pending', '2024-05-15'),
@@ -273,7 +272,7 @@ INSERT INTO Billing VALUES
 (9, 5, 900.00, 'Paid', '2024-06-18'),
 (10, 6, 750.00, 'Pending', '2024-06-20');
 
--- Insert medical devices
+-- Tıbbi cihazlar
 INSERT INTO MedicalDevice VALUES 
 (1, 1, 'Cardiac Monitor', '4.2.1', 'High'),
 (2, 1, 'ECG Machine', '3.1.0', 'Medium'),
@@ -282,53 +281,37 @@ INSERT INTO MedicalDevice VALUES
 (5, 2, 'CT Scanner', '3.8.0', 'High'),
 (6, 3, 'Ultrasound', '2.1.0', 'Medium');
 
--- Insert security events
+-- Güvenlik olayları
 INSERT INTO SecurityEvent VALUES 
 (1, 1, 1, 'Device Access', 'INFO', '192.168.1.100', '2024-05-20 10:00:00'),
 (2, 2, 2, 'Data Query', 'INFO', '192.168.1.101', '2024-05-20 11:30:00'),
 (3, 3, 1, 'Configuration Change', 'WARNING', '192.168.1.102', '2024-05-20 14:45:00'),
 (4, 1, 3, 'Firmware Update Pending', 'CRITICAL', '192.168.1.100', '2024-05-21 09:00:00'),
 (5, 4, 4, 'Unauthorized Access Attempt', 'CRITICAL', '203.0.113.50', '2024-05-21 15:30:00');
-\end{verbatim}
 
-\subsection*{6.3 ALTER TABLE Operations}
+-- Tablo geliştirmeleri ve indexler
 
-\begin{verbatim}
--- Add a new column for patient registration date
 ALTER TABLE Patient ADD COLUMN RegistrationDate DATE DEFAULT CURRENT_DATE;
-
--- Modify the Insurance table to add coverage percentage
 ALTER TABLE Insurance ADD COLUMN CoveragePct INT;
 
--- Add check constraint on billing amounts
+-- Kısıtlamalar
 ALTER TABLE Billing ADD CONSTRAINT chk_amount CHECK (Amount > 0);
-
--- Add check constraint on doctor consultation fee
-ALTER TABLE Doctor ADD CONSTRAINT chk_fee CHECK (
-  (SELECT Specialty FROM Doctor) IS NOT NULL AND 
-  (SELECT LicenseNumber FROM Doctor) IS NOT NULL
-);
-
--- Create a check for valid appointment status
 ALTER TABLE Appointment ADD CONSTRAINT chk_status CHECK (Status IN ('Scheduled', 'Completed', 'Cancelled'));
 
--- Modify column type for better precision
+-- Sütun tipleri
 ALTER TABLE MedicalDevice MODIFY COLUMN RiskLevel ENUM('Low', 'Medium', 'High', 'Critical');
 
--- Add index on frequently queried columns
-ALTER TABLE Appointment ADD INDEX idx_appointment_date (AppointmentDate);
-ALTER TABLE Appointment ADD INDEX idx_patient_doctor (PatientID, DoctorID);
+-- Performans indexleri
+CREATE INDEX idx_user_email ON User(Email);
+CREATE INDEX idx_patient_bloodtype ON Patient(BloodType);
+CREATE INDEX idx_doctor_license ON Doctor(LicenseNumber);
+CREATE INDEX idx_billing_status ON Billing(PaymentStatus);
+CREATE INDEX idx_insurance_provider ON Insurance(ProviderName);
+CREATE INDEX idx_appointment_status ON Appointment(Status);
 
--- Add a trigger-ready audit column (optional, some systems)
-ALTER TABLE SecurityEvent ADD COLUMN AuditLog VARCHAR(500);
-\end{verbatim}
+-- Sorgu örnekleri
 
-\newpage
-\section{7. Advanced SQL Queries}
-
-\subsection*{Query 1: Doctors with more than 5 appointments}
-
-\begin{verbatim}
+-- Sorgu 1: 5'ten fazla randevusu olan doktorlar
 SELECT d.DoctorID, u.FirstName, u.LastName, COUNT(a.AppointmentID) as appointment_count
 FROM Doctor d
 JOIN User u ON d.UserID = u.UserID
@@ -336,21 +319,15 @@ JOIN Appointment a ON d.DoctorID = a.DoctorID
 GROUP BY d.DoctorID, u.FirstName, u.LastName
 HAVING COUNT(a.AppointmentID) > 5
 ORDER BY appointment_count DESC;
-\end{verbatim}
 
-\subsection*{Query 2: Patients with no appointments scheduled}
-
-\begin{verbatim}
+-- Sorgu 2: Randevusu olmayan hastalar
 SELECT p.PatientID, u.FirstName, u.LastName
 FROM Patient p
 JOIN User u ON p.UserID = u.UserID
 LEFT JOIN Appointment a ON p.PatientID = a.PatientID
 WHERE a.AppointmentID IS NULL;
-\end{verbatim}
 
-\subsection*{Query 3: Most common diagnoses by department}
-
-\begin{verbatim}
+-- Sorgu 3: Bölüme göre en yaygın teşhisler
 SELECT d.DepartmentName, a.DiagnosisSummary, COUNT(*) as frequency
 FROM Appointment a
 JOIN Doctor dr ON a.DoctorID = dr.DoctorID
@@ -358,22 +335,16 @@ JOIN Department d ON dr.DepartmentID = d.DepartmentID
 WHERE a.DiagnosisSummary IS NOT NULL
 GROUP BY d.DepartmentName, a.DiagnosisSummary
 ORDER BY d.DepartmentName, frequency DESC;
-\end{verbatim}
 
-\subsection*{Query 4: Patients with incomplete billing}
-
-\begin{verbatim}
+-- Sorgu 4: Ödenmemiş faturaları olan hastalar
 SELECT p.PatientID, u.FirstName, u.LastName, b.Amount, b.PaymentStatus
 FROM Patient p
 JOIN User u ON p.UserID = u.UserID
 JOIN Billing b ON p.PatientID = b.PatientID
 WHERE b.PaymentStatus != 'Paid'
 ORDER BY b.BillingDate DESC;
-\end{verbatim}
 
-\subsection*{Query 5: Appointments with prescriptions and lab results}
-
-\begin{verbatim}
+-- Sorgu 5: İlaç ve laboraturar sonucu bulunan randevular
 SELECT a.AppointmentID, p.PatientID, u.FirstName, 
        COUNT(DISTINCT pr.PrescriptionNo) as prescription_count,
        COUNT(DISTINCT lr.ResultID) as lab_result_count
@@ -385,37 +356,8 @@ LEFT JOIN LabResult lr ON a.AppointmentID = lr.AppointmentID
 GROUP BY a.AppointmentID, p.PatientID, u.FirstName
 HAVING COUNT(DISTINCT pr.PrescriptionNo) > 0 
    AND COUNT(DISTINCT lr.ResultID) > 0;
-\end{verbatim}
 
-\subsection*{Query 6: Average appointments per doctor by department}
-
-\begin{verbatim}
-SELECT d.DepartmentName, AVG(doctor_appointments) as avg_appointments
-FROM Department d
-JOIN (
-    SELECT dr.DepartmentID, dr.DoctorID, COUNT(a.AppointmentID) as doctor_appointments
-    FROM Doctor dr
-    LEFT JOIN Appointment a ON dr.DoctorID = a.DoctorID
-    GROUP BY dr.DepartmentID, dr.DoctorID
-) subquery ON d.DepartmentID = subquery.DepartmentID
-GROUP BY d.DepartmentName;
-\end{verbatim}
-
-\subsection*{Query 7: Security events by severity}
-
-\begin{verbatim}
-SELECT u.FirstName, u.LastName, se.Severity, COUNT(se.EventID) as event_count
-FROM SecurityEvent se
-JOIN User u ON se.UserID = u.UserID
-WHERE se.EventTimestamp >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-GROUP BY u.UserID, u.FirstName, u.LastName, se.Severity
-HAVING COUNT(se.EventID) > 2
-ORDER BY se.Severity DESC, event_count DESC;
-\end{verbatim}
-
-\subsection*{Query 8: Patients' insurance coverage details}
-
-\begin{verbatim}
+-- Sorgu 6: Sigorta kapsamı detayları
 SELECT p.PatientID, u.FirstName, u.LastName, 
        i.ProviderName, i.CoverageType,
        COUNT(a.AppointmentID) as appointment_count
@@ -423,142 +365,21 @@ FROM Patient p
 JOIN User u ON p.UserID = u.UserID
 JOIN Insurance i ON p.InsuranceID = i.InsuranceID
 LEFT JOIN Appointment a ON p.PatientID = a.PatientID
-GROUP BY p.PatientID, u.FirstName, u.LastName, 
-         i.ProviderName, i.CoverageType;
-\end{verbatim}
+GROUP BY p.PatientID, u.FirstName, u.LastName, i.ProviderName, i.CoverageType;
 
-\subsection*{Query 9: Medical devices with high risk needing firmware updates}
-
-\begin{verbatim}
+-- Sorgu 7: Yüksek risk tıbbi cihazlar
 SELECT h.HospitalName, md.DeviceType, md.FirmwareVersion, md.RiskLevel
 FROM MedicalDevice md
 JOIN Hospital h ON md.HospitalID = h.HospitalID
 WHERE md.RiskLevel IN ('High', 'Critical')
 ORDER BY h.HospitalName, md.RiskLevel DESC;
-\end{verbatim}
 
-\subsection*{Query 10: Prescription refill analysis}
-
-\begin{verbatim}
-SELECT 
-    pr.MedicineName, 
-    COUNT(pr.PrescriptionNo) as prescription_count,
-    AVG(pr.DurationDays) as avg_duration,
-    MAX(a.AppointmentDate) as last_prescribed
+-- Sorgu 8: İlaç analizi
+SELECT pr.MedicineName, COUNT(pr.PrescriptionNo) as prescription_count,
+       AVG(pr.DurationDays) as avg_duration
 FROM Prescription pr
 JOIN Appointment a ON pr.AppointmentID = a.AppointmentID
 GROUP BY pr.MedicineName
 ORDER BY prescription_count DESC;
-\end{verbatim}
 
-\newpage
-\section{8. Relational Algebra and Calculus}
-
-\subsection*{8.1 Relational Algebra Queries}
-
-\textbf{Query 1: Find all patients from Istanbul}
-
-\[\pi_{PatientID, FirstName, LastName}(\sigma_{City='Istanbul'}(User \bowtie Patient))\]
-
-\textbf{Query 2: Appointments scheduled for May 2024}
-
-\[\pi_{AppointmentID, PatientID, DoctorID, Status}(\sigma_{AppointmentDate \geq '2024-05-01' \land AppointmentDate < '2024-06-01'}(Appointment))\]
-
-\textbf{Query 3: Doctors in Cardiology department}
-
-\[\pi_{DoctorID, FirstName, LastName}(Doctor \bowtie_{DepartmentID} (\sigma_{DepartmentName='Cardiology'}(Department)) \bowtie_{UserID} User)\]
-
-\subsection*{8.2 Tuple Relational Calculus Queries}
-
-\textbf{Query 1: Find all patients with blood type O+}
-
-\[\{t | t \in Patient \land t.BloodType = 'O+'\}\]
-
-\textbf{Query 2: Find doctors and their department names}
-
-\[\{(d, d\_name, dept\_name) | Doctor(d) \land User(u) \land d.UserID = u.id \land Department(dept) \land d.DepartmentID = dept.id \land d\_name = u.FirstName \lor u.LastName \land dept\_name = dept.DepartmentName\}\]
-
-\textbf{Query 3: Find appointments with prescriptions}
-
-\[\{a.AppointmentID | Appointment(a) \land \exists p (Prescription(p) \land a.AppointmentID = p.AppointmentID)\}\]
-
-\newpage
-\section{9. Indexing and File Structures}
-
-\subsection*{9.1 Index Strategy}
-
-The following indexes are created for performance optimization:
-
-\begin{itemize}
-    \item \textbf{Appointment(PatientID)}: Frequently used in WHERE and JOIN clauses for patient lookups
-    \item \textbf{Appointment(DoctorID)}: Supports queries filtering appointments by doctor
-    \item \textbf{Appointment(AppointmentDate)}: Enables range queries on appointment dates
-    \item \textbf{SecurityEvent(UserID)}: Optimizes SIEM queries monitoring user activity
-    \item \textbf{SecurityEvent(EventTimestamp)}: Supports time-based filtering and auditing
-\end{itemize}
-
-\subsection*{9.2 Index Comparison: Indexed vs Non-Indexed}
-
-\textbf{Scenario:} Query patients with appointments in May 2024
-
-\textbf{Without Index on Appointment(PatientID, AppointmentDate):}
-\begin{itemize}
-    \item Full table scan of Appointment table: O(n) where n = total appointments
-    \item Estimated rows examined: 50,000 (for large datasets)
-    \item Query time: 5-10 seconds
-\end{itemize}
-
-\textbf{With B+ Tree Index on Appointment(PatientID, AppointmentDate):}
-\begin{itemize}
-    \item Index lookup: O(log n)
-    \item Rows examined: 50-100 (range scan within index)
-    \item Query time: 50-200 milliseconds
-    \item \textbf{Performance improvement: 25-100x faster}
-\end{itemize}
-
-\subsection*{9.3 B+ Tree Index Structure for Appointment}
-
-\begin{verbatim}
-Leaf Nodes: [PatientID, AppointmentDate, Pointer to row]
-Example:
-    [1, 2024-05-10, Row1000]
-    [1, 2024-05-20, Row1001]
-    [2, 2024-05-15, Row1002]
-    ...
-    [100, 2024-06-01, Row5000]
-
-Interior Nodes route to appropriate leaf ranges.
-\end{verbatim}
-
-\subsection*{9.4 Hash Index for Exact Lookups}
-
-\textbf{Index:} User(Email)
-
-\begin{itemize}
-    \item Hash function distributes emails into buckets
-    \item Average lookup time: O(1)
-    \item Use case: User login by email
-\end{itemize}
-
-\subsection*{9.5 Index Maintenance Considerations}
-
-\begin{itemize}
-    \item \textbf{Write overhead:} Indexes slow INSERT/UPDATE/DELETE by 10-20\%
-    \item \textbf{Storage cost:} Each index requires ~20\% additional disk space
-    \item \textbf{Maintenance:} Indexes on frequently updated columns (e.g., Status) should be monitored
-    \item \textbf{Strategy:} Index hot columns (PatientID, DoctorID, AppointmentDate) only
-\end{itemize}
-
-\subsection*{9.6 Performance Summary}
-
-\begin{tabular}{lcc}
-\textbf{Query Type} & \textbf{Without Index} & \textbf{With Index} \\
-\hline
-Single patient lookup & 5-10 sec & 10-50 ms \\
-Date range query (month) & 8-15 sec & 50-200 ms \\
-Doctor's appointments & 10-20 sec & 100-300 ms \\
-Security event filtering & 20+ sec & 50-100 ms \\
-\end{tabular}
-
-Indexing provides \textbf{50-200x improvement} for common queries in large healthcare datasets.
-
+-- Kurulum tamamlandı

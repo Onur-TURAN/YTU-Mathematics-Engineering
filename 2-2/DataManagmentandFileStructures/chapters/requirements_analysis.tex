@@ -1,0 +1,164 @@
+\newpage
+\section{1. Requirements Analysis}
+
+\subsection*{1.1 System Overview}
+
+The Smart Healthcare Management System is a comprehensive database solution designed to support large-scale hospital networks with multiple facilities, departments, healthcare providers, and patients. The system manages complex healthcare workflows including patient records, medical appointments, prescriptions, laboratory results, insurance claims, and billing operations.
+
+\subsection*{1.2 Entity Requirements}
+
+The system must model the following key entities:
+
+\subsubsection*{Organizational Entities}
+\begin{itemize}
+    \item \textbf{Hospital}: Multiple hospital branches with location, contact information, and operational details
+    \item \textbf{Department}: Specialized departments within hospitals (Cardiology, Neurology, Orthopedics, etc.)
+    \item \textbf{User}: Superclass representing all system users with authentication and profile information
+\end{itemize}
+
+\subsubsection*{Healthcare Professional Entities}
+\begin{itemize}
+    \item \textbf{Doctor}: Specialized subclass of User with license number, specialty, department assignment, and consultation fees
+    \item \textbf{Admin}: Administrative staff subclass with role and office contact details
+\end{itemize}
+
+\subsubsection*{Patient and Medical Entities}
+\begin{itemize}
+    \item \textbf{Patient}: Patient subclass with blood type, emergency contact, and medical history tracking
+    \item \textbf{Appointment}: Clinical encounters between patients and doctors with diagnosis and status tracking
+    \item \textbf{Prescription}: Medication orders issued during appointments (weak entity)
+    \item \textbf{LabResult}: Laboratory test results and clinical findings
+    \item \textbf{Diagnosis}: Medical diagnoses using ICD codes
+\end{itemize}
+
+\subsubsection*{Insurance and Billing Entities}
+\begin{itemize}
+    \item \textbf{Insurance}: Patient insurance policy information and coverage details
+    \item \textbf{Billing/Invoice}: Financial transactions, payment status, and claim management
+\end{itemize}
+
+\subsubsection*{Security and Device Management}
+\begin{itemize}
+    \item \textbf{MedicalDevice}: Medical equipment inventory with firmware and risk assessment
+    \item \textbf{SecurityEvent}: Audit logs for system access, device interactions, and security monitoring
+\end{itemize}
+
+\subsection*{1.3 Relationship Requirements}
+
+The system must support the following relationships:
+
+\begin{tabular}{lll}
+\textbf{Relationship} & \textbf{Type} & \textbf{Cardinality} \\
+\hline
+Hospital → Department & Organizational & 1:N \\
+Department → Doctor & Assignment & 1:N \\
+Hospital → MedicalDevice & Equipment & 1:N \\
+Patient → Appointment & Medical History & 1:N \\
+Doctor → Appointment & Service Provider & 1:N \\
+Appointment → Prescription & Medical Order & 1:N \\
+Appointment → LabResult & Clinical Finding & 1:N \\
+Appointment → Diagnosis & ICD Coding & 1:N \\
+Patient → Insurance & Coverage & 1:N \\
+Appointment → Invoice & Billing & 1:N \\
+User → SecurityEvent & Audit Trail & 1:N \\
+\end{tabular}
+
+\subsection*{1.4 Data Constraints}
+
+\subsubsection*{Uniqueness Constraints}
+\begin{itemize}
+    \item User email addresses must be globally unique
+    \item Doctor license numbers must be unique
+    \item Insurance policy numbers must be unique
+    \item Department names must be unique within a hospital
+\end{itemize}
+
+\subsubsection*{Domain Constraints}
+\begin{itemize}
+    \item User role must be one of: PATIENT, DOCTOR, ADMIN, SECURITY\_ANALYST
+    \item Appointment status must be: SCHEDULED, COMPLETED, CANCELLED
+    \item Invoice status must be: UNPAID, PARTIAL, PAID
+    \item Gender must be: M, F, or O
+    \item Consultation fees must be non-negative
+    \item Patient blood type must be: A+, A-, B+, B-, AB+, AB-, O+, O-
+    \item Risk levels for devices: LOW, MEDIUM, HIGH, CRITICAL
+    \item Event severity: INFO, WARNING, ERROR, CRITICAL
+\end{itemize}
+
+\subsubsection*{Referential Integrity}
+\begin{itemize}
+    \item All foreign keys must maintain referential integrity with cascade deletion where appropriate
+    \item Patient records cannot be deleted if appointments exist (protect historical data)
+    \item Doctor records must reference valid users
+    \item Department records must reference valid hospitals
+\end{itemize}
+
+\subsection*{1.5 Specialization/Generalization (EER)}
+
+The User entity employs a \textbf{total, disjoint specialization} hierarchy:
+
+\begin{itemize}
+    \item \textbf{Superclass}: User (supertype)
+    \item \textbf{Subclasses}: Patient, Doctor, Admin
+    \item \textbf{Specialization Type}: Disjoint (a user cannot be both Patient and Doctor simultaneously)
+    \item \textbf{Participation}: Total (every user must have a role)
+    \item \textbf{Discriminator}: user\_type attribute
+\end{itemize}
+
+\subsection*{1.6 Weak Entity}
+
+The \textbf{Prescription} entity is a weak entity:
+
+\begin{itemize}
+    \item \textbf{Owner Entity}: Appointment
+    \item \textbf{Identifying Relationship}: Each prescription must reference an appointment
+    \item \textbf{Partial Key}: prescription\_no (unique within an appointment only)
+    \item \textbf{Full Key}: (appointment\_id, prescription\_no)
+\end{itemize}
+
+\subsection*{1.7 Multivalued Attributes}
+
+\begin{itemize}
+    \item \textbf{User.phone}: Users may have multiple phone numbers (mapped to separate table)
+    \item \textbf{Patient.phone}: Patients may have multiple contact numbers
+\end{itemize}
+
+\subsection*{1.8 Composite Attributes}
+
+\begin{itemize}
+    \item \textbf{User.Name}: FirstName, LastName
+    \item \textbf{User.Address}: Street, City, PostalCode
+\end{itemize}
+
+\subsection*{1.9 Non-Functional Requirements}
+
+\subsubsection*{Performance}
+\begin{itemize}
+    \item Appointment searches by patient or date must complete in < 100ms for datasets with 1M+ records
+    \item Security event queries must support real-time SIEM integration
+    \item Indexing strategy required for frequently accessed columns
+\end{itemize}
+
+\subsubsection*{Security}
+\begin{itemize}
+    \item Patient medical records must be audit-logged
+    \item All data modifications must be tracked with timestamp and user context
+    \item System must support role-based access control (RBAC)
+    \item Sensitive data (SSN, insurance details) must be encrypted
+\end{itemize}
+
+\subsubsection*{Integrity}
+\begin{itemize}
+    \item Appointment cannot be created for doctors not in the appointment's department
+    \item Doctor must be assigned to a department before creating appointments
+    \item Invoice must reference a valid appointment
+    \item Prescription must reference a valid medication
+\end{itemize}
+
+\subsubsection*{Scalability}
+\begin{itemize}
+    \item System must support multiple hospital networks (multi-tenancy ready)
+    \item Database must scale horizontally to support > 100,000 concurrent users
+    \item Partition strategy for historical appointment data recommended
+\end{itemize}
+

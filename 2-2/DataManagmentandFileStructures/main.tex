@@ -1,14 +1,21 @@
 \documentclass{article}
-\usepackage[utf8]{inputenc}
-\usepackage[turkish]{babel}
+\usepackage[turkish,english]{babel}
 \usepackage[T1]{fontenc}
 \usepackage{tikz}
+\usepackage{amssymb}
+\selectlanguage{english}
+\renewcommand{\contentsname}{Contents}
+\selectlanguage{turkish}
 \usetikzlibrary{shapes,arrows.meta,positioning}
 
 \begin{document}
 
 \input{chapters/whoami}
+\newpage
+\tableofcontents
+\newpage
 \input{chapters/homework}
+\input{chapters/requirements_analysis}
 \input{chapters/er_diagram}
 % Modular diagram inputs (keşif/test için)
 \input{chapters/figures/er_summary}
